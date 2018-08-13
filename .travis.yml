@@ -7,6 +7,7 @@ branches:
   only:
   - master
   - commonlib
+  - cmakeProject
 
 matrix:
  fast_finish: true
@@ -16,9 +17,21 @@ matrix:
     sudo: required
     compiler: gcc
     env:
-      - QTVERSIONMINOR=59 QTVERSIONPATCH=595
+      - QTVERSIONMINOR=59 QTVERSIONPATCH=595 USECMAKE=OFF
   - os: osx
     compiler: clang
+    env:
+      - USECMAKE=OFF
+  - os: linux
+    dist: trusty
+    sudo: required
+    compiler: gcc
+    env:
+      - QTVERSIONMINOR=59 QTVERSIONPATCH=595 USECMAKE=ON
+  - os: osx
+    compiler: clang
+    env:
+      - USECMAKE=ON
 
 install:
   - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
@@ -51,8 +64,17 @@ script:
       && CPPFLAGS=-I$QTDIR/include
       ;
     fi
-- qmake QtSimpleChat.pro
-- make
+- if [ "${USECMAKE}" = "ON" ]; then
+      mkdir ./build
+      && cd ./build
+      && cmake ../
+      && cmake --build .
+      ;
+  else
+      qmake QtSimpleChat.pro
+      && make
+      ;
+  fi
 
 notifications:
   email: false
